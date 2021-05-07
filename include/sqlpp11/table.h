@@ -34,6 +34,7 @@
 #include <sqlpp11/detail/type_set.h>
 #include <sqlpp11/join.h>
 #include <sqlpp11/data_types/no_value.h>
+#include <sstream>
 
 namespace sqlpp
 {
@@ -60,6 +61,7 @@ namespace sqlpp
     using _foreign_table_alias_t = table_alias_t<AliasProvider, T, ColumnSpec...>;
     template <typename AliasProvider>
     using _alias_t = table_alias_t<AliasProvider, Table, ColumnSpec...>;
+    std::string sharding_table_name;
 
     template <typename T>
     auto join(T t) const -> decltype(::sqlpp::join(std::declval<Table>(), t))
@@ -118,9 +120,13 @@ namespace sqlpp
     using _serialize_check = consistent_t;
     using T = X;
 
-    static Context& _(const T& /*unused*/, Context& context)
+    static Context& _(const T& t, Context& context)
     {
-      context << name_of<T>::template char_ptr<Context>();
+      if (t.sharding_table_name.empty()) {
+        context << name_of<T>::template char_ptr<Context>();
+      } else {
+        context << t.sharding_table_name;
+      }
       return context;
     }
   };
